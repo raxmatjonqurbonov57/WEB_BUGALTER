@@ -7,7 +7,7 @@ from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiohttp import web
 
-BOT_TOKEN = "8870357747:AAEcYCuuAZ-WyAT5adqTjcrN8bzccNyrX0U"
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_IDS = {8599541645}
 DB_PATH = "bot.db"
 PAGE_SIZE = 5
@@ -118,7 +118,6 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
 async def health(request):
     return web.Response(text="ok")
 
@@ -126,7 +125,27 @@ async def health(request):
 async def start_web():
     app = web.Application()
     app.router.add_get("/", health)
+
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", int(os.getenv("PORT", 10000)))
+
+    port = int(os.getenv("PORT", 10000))
+    site = web.TCPSite(runner, "0.0.0.0", port)
     await site.start()
+
+
+async def main():
+    await init_db()
+
+    bot = Bot(os.environ["BOT_TOKEN"])
+    dp = Dispatcher()
+    dp.include_router(router)
+
+    await start_web()
+    print("Web server ishga tushdi!")
+
+    await dp.start_polling(bot)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
