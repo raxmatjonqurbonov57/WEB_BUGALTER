@@ -5,6 +5,7 @@ import aiosqlite
 from aiogram import Bot, Dispatcher, Router, F
 from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiohttp import web
 
 BOT_TOKEN = "8870357747:AAEcYCuuAZ-WyAT5adqTjcrN8bzccNyrX0U"
 ADMIN_IDS = {8599541645}
@@ -105,3 +106,27 @@ def user_detail_keyboard(telegram_id: int, is_blocked: bool):
         [InlineKeyboardButton(text=text, callback_data=f"{action}:{telegram_id}")],
         [InlineKeyboardButton(text="Ro'yxatga", callback_data="users:0")],
     ])
+
+async def main():
+    await init_db()
+    await start_web()
+    bot = Bot(BOT_TOKEN)
+    dp = Dispatcher()
+    dp.include_router(router)
+    await dp.start_polling(bot)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+async def health(request):
+    return web.Response(text="ok")
+
+
+async def start_web():
+    app = web.Application()
+    app.router.add_get("/", health)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", int(os.getenv("PORT", 10000)))
+    await site.start()
